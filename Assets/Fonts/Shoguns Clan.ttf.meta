@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: f5fd069e44da349a3a663d7d00a03db4
+timeCreated: 1527678486
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 60
+  forceTextureCase: -1
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Shoguns Clan
+  fontNames:
+  - Shoguns Clan
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
