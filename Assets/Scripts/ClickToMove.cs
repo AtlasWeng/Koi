@@ -8,29 +8,42 @@ public class ClickToMove : MonoBehaviour/*, IPointerClickHandler */{
 
 	//public float clicktime = 0.5f;
 
-	[Header("_agent")]
-	public float speedMultiplier = 2.0f;
-	public float moveSpeed = 15f;
+	[Header("Agent")]
+	public float normalSpeed = 15f;
+
+	[Header ("Attack")]
+	[Range (0f, 1f)]
+	public float attackRate;
 
 	// private variable
-	private float _velocity;
 	private float maxSpeed;
+	private float maxSpeedMultiplier = 2.0f;
+	private float currentSpeedMultiplier = 1f;
+	private float nextShoot;
 
+	private Transform target;
+
+	private bool doubleClick = false;
+	private bool enemyClicked;
+	private bool swimming;
+
+	PlayerShooting playershooting;
 
 	// store reference to component on gameobject
 	NavMeshAgent _agent;
-	Camera _mainCam;
 	Animator _animator;
+
 	//float clicked;
 
 	void Awake() {
 		_agent = GetComponent<NavMeshAgent>();
-		_mainCam = Camera.main;
 		_animator = GetComponent<Animator>();
+		playershooting = GetComponentInChildren <PlayerShooting> ();
 	}
 
 	void Start () {
-		maxSpeed = moveSpeed * speedMultiplier;
+		maxSpeed = normalSpeed * maxSpeedMultiplier;
+		Debug.Log ("Max speed is: " + maxSpeed);
 	}
 
 //	bool DoubleClick ()
@@ -49,28 +62,54 @@ public class ClickToMove : MonoBehaviour/*, IPointerClickHandler */{
 	public void OnPointerClick(BaseEventData basedata)
     {
 		PointerEventData data = (PointerEventData) basedata;	
-    	Debug.Log("one clicked");
+    	//Debug.Log("one clicked");
         if (data.clickCount == 2)
         {
-        	Debug.Log("double clicked");
-			_agent.speed *= speedMultiplier; 
-			_animator.SetFloat("SpeedMultiplier", speedMultiplier);
-			_animator.SetFloat("SwimSpeed", _agent.speed);
+        	//Debug.Log("double clicked");
+			_agent.speed *= maxSpeedMultiplier; 
+			doubleClick = true;
         }
     }
 
 	void OneClickMove ()
 	{
 		if (Input.GetMouseButtonDown (0)) {
-			_animator.SetFloat ("SpeedMultiplier", 1);
-			_animator.SetFloat ("SwimSpeed", _agent.speed);
-			_agent.speed = moveSpeed;
-			Ray ray = _mainCam.ScreenPointToRay (Input.mousePosition);
+			//_animator.SetFloat ("SpeedMultiplier", 1);
+			doubleClick = false;
+			_agent.speed = normalSpeed;
+			Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
 			RaycastHit hit;
 			if (Physics.Raycast (ray, out hit)) {
-				// MOVE OUR AGENT
-				_agent.SetDestination (hit.point);
+				if (hit.collider.CompareTag ("Enemy")) {
+					target = hit.transform;
+					enemyClicked = true;
+				} else {
+					swimming = true;
+					enemyClicked = false;
+					_agent.SetDestination (hit.point); // move our agent
+				}
 			}
+
+			if (enemyClicked) {
+				ShootBubble ();
+			}
+		}
+	}
+
+	private void ShootBubble ()
+	{
+		if (target == null) {
+			return;
+		}
+		if (Time.time > nextShoot) {
+			nextShoot = Time.time + attackRate;
+
+			transform.LookAt (target);
+
+			Vector3 dirToShoot = target.transform.position - transform.position;
+			//Debug.Log ("Bubble direction is: " +  dirToShoot.normalized);
+
+			playershooting.Shoot (dirToShoot);
 		}
 	}
 
@@ -79,6 +118,16 @@ public class ClickToMove : MonoBehaviour/*, IPointerClickHandler */{
 	{
 		OneClickMove ();
 
-		_animator.SetFloat("_velocity", _velocity);
+		if (doubleClick) {
+			if (currentSpeedMultiplier < maxSpeedMultiplier) {
+				currentSpeedMultiplier += Time.deltaTime;
+			} 
+		} else {
+			currentSpeedMultiplier = 1;
+		}
+
+		// update animation conditions
+		_animator.SetFloat("_speedMultiplier", currentSpeedMultiplier);
+		_animator.SetFloat("_velocity", _agent.velocity.magnitude / maxSpeed);
 	}
 }
