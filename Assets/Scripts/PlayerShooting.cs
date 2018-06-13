@@ -66,6 +66,7 @@ public class PlayerShooting : MonoBehaviour {
 				bubble.GetComponent <Rigidbody> ().AddForce (shootDir.normalized * bubbleSpeed);
 			}
 
+
 		}
 	}
 }
